@@ -48,7 +48,7 @@ Dataall.psY = [Data.v1.psY Data.v2.psY Data.v3.psY Data.v4.psY Data.v5.psY Data.
 Dataall.twt=Data.v1.twt;
 
 dt=Dataall.twt(3)-Dataall.twt(2);
-[nr nc]=size(Data.v1.layers_relto_surface);
+[nr nc]=size(Dataall.psY);
 
 %min horizons that overlap - check why only 8
 min_nr=8;%usually would use nr, something needs to be fixed with final layer files
@@ -73,6 +73,7 @@ end
 %Firncorrection (external function)
 %It is taking lots of time!!!
 Dataall=Firncorrect(Dataall, rho, dt, dz, MaxDepth, nr,nc,z);
+Dataall.layers_firncorr_depth(isnan(Dataall.layers_time))=NaN;
 
 %plot firncorr layers to check
 figure(2)
@@ -108,13 +109,13 @@ xlabel('Eastings')
 ylabel('Northings')
 zlabel('Elevation (m)')
 
-
 %% save data
 
 Geoall_FirnFileName = ['D:\Publications\Koch_ice_shelf_characteristics\Data\Picked_Layers\Geoall_' FileName];
 save(Geoall_FirnFileName,'-struct', 'Dataall')
 
 %% correct bed pick, consider Bedmachine ice and average FA for compatability with Elmer ice
+%% also good for Quickshot codes
 
 %%NEED to fix and add the following for depth conversion of the basal pick
 %%and co-plotting with ELMER ice surfaces considering ice and FA
