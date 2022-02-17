@@ -19,9 +19,9 @@ addpath('Z:\data\ikoch\data_large\BedMachine'); %add path to 'BedMachineAntarcti
 %% set variables for density correction
 MaxDepth=1000; %in metres
 dz=0.001; % in meters.
+z=0:dz:MaxDepth;
 %rho = 910-460*exp(-0.033*z);%for RBIS
 rho = 910-460*exp(-0.025*z);%for DIR 
-z=0:dz:MaxDepth;
 
 %% load layer data in open folder
 
@@ -68,7 +68,7 @@ end
 
 %% run firncorrection
 
-nr=1; %only added for test purposes
+%nr=1; %only added for test purposes
 %Firncorrection (external function)
 %It is taking lots of time!!!
 Dataall=Firncorrect(Dataall, rho, dt, dz, MaxDepth, nr, nc,z);
@@ -101,11 +101,12 @@ figure(3) % check results
 plot3(Dataall.psX, Dataall.psY, Dataall.Surface_REMA_fromBedmachine_firn)
 hold on
 for kk=1:min_nr
-plot3(Dataall.psX, Dataall.psY, Dataall.layers_firncorr_elevation_REMA)
+plot3(Dataall.psX, Dataall.psY, movmean(Dataall.layers_firncorr_elevation_REMA(kk,:),100))
 end
 xlabel('Eastings')
 ylabel('Northings')
 zlabel('Elevation (m)')
+
 
 %% save data
 
