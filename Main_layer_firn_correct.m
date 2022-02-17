@@ -52,6 +52,7 @@ dt=Dataall.twt(3)-Dataall.twt(2);
 
 %min horizons that overlap - check why only 8
 min_nr=8;%usually would use nr, something needs to be fixed with final layer files
+nr=min_nr;%note, not all files have 13 layers
 
 %%change hardcoding!
 for kk=1:min_nr
@@ -71,7 +72,7 @@ end
 %nr=1; %only added for test purposes
 %Firncorrection (external function)
 %It is taking lots of time!!!
-Dataall=Firncorrect(Dataall, rho, dt, dz, MaxDepth, nr, nc,z);
+Dataall=Firncorrect(Dataall, rho, dt, dz, MaxDepth, nr,nc,z);
 
 %plot firncorr layers to check
 figure(2)
