@@ -1,7 +1,5 @@
 function [Data] = Firncorrect(Data,rho,dt,dz,MaxDepth,nr,nc)
 
-z=0:dz:MaxDepth;
-
 %% Get velocity-depth profile considering density
 % Kovacs et al.; Cold Regions Science and Technology 23 (1995) 245-256 
 %(Kovacs this makes v_ice approx 1.685e8, check specific gravity again)
