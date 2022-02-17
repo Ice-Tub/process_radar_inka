@@ -10,10 +10,13 @@ addpath('Z:\docs\ikoch\src\AMT\BedMachine'); % change this to your path and also
 % and data: https://nsidc.org/data/nsidc-0756 
 %add final fuctions
 addpath('D:\Publications\Koch_ice_shelf_characteristics\src\process_radar');
+addpath('D:\Publications\Koch_ice_shelf_characteristics\src\process_radar\auxfunctions');
+addpath('D:\Publications\Koch_ice_shelf_characteristics\src\process_radar\auxfunctions\Bedmachine');
 
-%add path to Geoid
-Geoidpath = 'D:\Data_general_Antarctica\EIGEN-6C4\geoid_large_domain';
-FApath = 'D:\Data_general_Antarctica\Bedmachine_FA_content\firn22.tif';
+%add path to Geoid, FA file, Antarctica REMA
+Geoidpath = 'Z:\data\ikoch\data_large\Data_general_Antarctica\EIGEN-6C4\geoid_large_domain';
+FApath = 'Z:\data\ikoch\data_large\Data_general_Antarctica\Bedmachine_FA_content\firn22.tif';
+addpath('Z:\data\ikoch\data_large\BedMachine'); %add path to 'BedMachineAntarctica_2020-07-15_v02.nc' 
 
 myDir = cd; %folder with data to be processed, needs to be open as 'Current Folder'
 myFiles = dir(fullfile(myDir,'*.mat')); %gets all mat files in struct
@@ -37,7 +40,7 @@ z=0:dz:MaxDepth;
 rho = 910-460*exp(-0.025*z);%for DIR 
 
 %concacenate layers together
-%may want to create loop for more than one layer
+%FIX: create loop to concacenate and also adjust for variable number of data files
 Dataall.psX = [Data.v1.psX Data.v2.psX Data.v3.psX Data.v4.psX Data.v5.psX Data.v6.psX Data.v7.psX Data.v8.psX Data.v9.psX];
 Dataall.psY = [Data.v1.psY Data.v2.psY Data.v3.psY Data.v4.psY Data.v5.psY Data.v6.psY Data.v7.psY Data.v8.psY Data.v9.psY];
 %Dataall.layers_relto_surface(kk,:)
@@ -107,7 +110,8 @@ zlabel('Elevation (m)')
 
 Geoall_FirnFileName = ['D:\Publications\Koch_ice_shelf_characteristics\Data\Picked_Layers\Geoall_' FileName];
 
-% %consider FA content to derive layer depth in tune with ELMER Model
+%%NEED to fix and add the following for depth conversion of the basal pick
+%%and co-plotting with ELMER ice surfaces considering ice and FA
 % for nn=1:Drows
 %     Layer_firn(nn,:)=Data.layers_firncorr_depth_below_surf(nn,:);
 % for kk=1:Dcolumns
