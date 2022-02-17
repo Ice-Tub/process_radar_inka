@@ -3,6 +3,7 @@ clear all
 % this fuction needs Antarctic mapping tools installed/downloaded
 % Antarctic Mapping Tools: https://www.mathworks.com/matlabcentral/fileexchange/47638
 addpath('Z:\docs\ikoch\src\AntarcticMappingTools'); % change this to your path
+addpath('Z:\docs\ikoch\src\AMT');
 % and Antarctic Bedmachine codes
 % https://github.com/chadagreene/BedMachine
 addpath('Z:\docs\ikoch\src\AMT\BedMachine'); % change this to your path and also change the path within codes to access the following data file
@@ -62,9 +63,11 @@ hold on
 set(gca,'Zdir','reverse')
 end
 
+nr=1; %only added for test purposes
+
 %Firncorrection (external function)
 %It is taking lots of time!!!
-Dataall=Firncorrect(Dataall, rho, dt, dz, MaxDepth, nr, nc);
+Dataall=Firncorrect(Dataall, rho, dt, dz, MaxDepth, nr, nc,z);
 
 %plot firncorr layers to check
 figure(2)
@@ -79,6 +82,7 @@ Dataall=ExtractFAcontent(Dataall,FApath);
 %the following uses the fuction bedmachine_data, which accesses the AMT toolbox and the
 %AntarcticaFilename = 'BedMachineAntarctica_2020-07-15_v02.nc'; 
 %Bedmachine surface is using the REMA DEM smoothly interpolated
+addpath('Z:\docs\ikoch\src\AntarcticMappingTools'); 
 Dataall.Surface_Bedmachine_ice = bedmachine_interp('surface',Dataall.psX,Dataall.psY);
 Dataall.Surface_Bedmachine_firn = Dataall.Surface_Bedmachine_ice+Dataall.FA;
 Dataall.Surface_REMA_fromBedmachine_firn=Dataall.Surface_Bedmachine_ice+Dataall.geoid+Dataall.FA;
@@ -92,10 +96,10 @@ Dataall.layers_firncorr_elevation_REMA(kk,:)=Dataall.Surface_REMA_fromBedmachine
 end
 
 figure(3) % check results
-plot3(psX_all, psY_all, Dataall.Surface_REMA_fromBedmachine_firn)
+plot3(Dataall.psX, Dataall.psY, Dataall.Surface_REMA_fromBedmachine_firn)
 hold on
 for kk=1:min_nr
-plot3(psX_all, psY_all, Dataall.layers_firncorr_elevation_REMA)
+plot3(Dataall.psX, Dataall.psY, Dataall.layers_firncorr_elevation_REMA)
 end
 xlabel('Eastings')
 ylabel('Northings')
