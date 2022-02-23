@@ -19,12 +19,13 @@ addpath('Z:\data\ikoch\data_large\BedMachine'); %add path to 'BedMachineAntarcti
 %% set variables for density correction
 MaxDepth=1000; %in metres
 dz=0.001; % in meters.
-%rho = 910-460*exp(-0.033*z);%for RBIS
-rho = 910-460*exp(-0.025*z);%for DIR 
 z=0:dz:MaxDepth;
+rho = 910-460*exp(-0.033*z);%for RBIS
+%rho = 910-460*exp(-0.025*z);%for DIR 
 
 %% load layer data in open folder
 
+% load from Z:\data\ikoch\data_large\Radar\Data\AWI_flights\Picked_final\07_01_Heiko
 myDir = cd; %folder with data to be processed, needs to be open as 'Current Folder'
 myFiles = dir(fullfile(myDir,'*.mat')); %gets all mat files in struct
 nf=length(myFiles);
@@ -38,25 +39,26 @@ my_field = strcat('v',num2str(k));
 Data.(my_field) = importdata(FileName_org);
 %GeoidFirnFileName = ['D:\Radar\Data\AWI_flights\Data\Picked_data\processed\Firncorrect_Bedmach_surf\GeoidFirn' FileName '.csv'];
 end
-%%
 
-%concacenate layers together
+%% concacenate layers together
+
 %FIX: create loop to concacenate and also adjust for variable number of data files
-Dataall.psX = [Data.v1.psX Data.v2.psX Data.v3.psX Data.v4.psX Data.v5.psX Data.v6.psX Data.v7.psX Data.v8.psX Data.v9.psX];
-Dataall.psY = [Data.v1.psY Data.v2.psY Data.v3.psY Data.v4.psY Data.v5.psY Data.v6.psY Data.v7.psY Data.v8.psY Data.v9.psY];
+Dataall.psX = [Data.v1.psX Data.v2.psX Data.v3.psX];
+Dataall.psY = [Data.v1.psY Data.v2.psY Data.v3.psY];
 %Dataall.layers_relto_surface(kk,:)
 Dataall.twt=Data.v1.twt;
 
 dt=Dataall.twt(3)-Dataall.twt(2);
-[nr nc]=size(Data.v1.layers_relto_surface);
+[nr nc]=size(Dataall.psY);
+%nr=1; %only added for test purposes
 
 %min horizons that overlap - check why only 8
-%min_nr=8;%usually would use nr
-min_nr=1;%usually would use nr
+min_nr=18;%usually would use nr, something needs to be fixed with final layer files
+nr=min_nr;%note, not all files have 13 layers
 
 %%change hardcoding!
 for kk=1:min_nr
-Dataall.layers_relto_surface(kk,:)=[Data.v1.layers_relto_surface(kk,:) Data.v2.layers_relto_surface(kk,:) Data.v3.layers_relto_surface(kk,:) Data.v4.layers_relto_surface(kk,:) Data.v5.layers_relto_surface(kk,:) Data.v6.layers_relto_surface(kk,:) Data.v7.layers_relto_surface(kk,:) Data.v8.layers_relto_surface(kk,:) Data.v9.layers_relto_surface(kk,:)];
+Dataall.layers_relto_surface(kk,:)=[Data.v1.layers_relto_surface(kk,:) Data.v2.layers_relto_surface(kk,:) Data.v3.layers_relto_surface(kk,:)];
 end
 
 %plot layers to check
@@ -67,11 +69,12 @@ hold on
 set(gca,'Zdir','reverse')
 end
 
-nr=1; %only added for test purposes
+%% run firncorrection
 
 %Firncorrection (external function)
 %It is taking lots of time!!!
-Dataall=Firncorrect(Dataall, rho, dt, dz, MaxDepth, nr, nc,z);
+Dataall=Firncorrect(Dataall, rho, dt, dz, MaxDepth, nr,nc,z);
+Dataall.layers_firncorr_depth(isnan(Dataall.layers_time))=NaN;
 
 %plot firncorr layers to check
 figure(2)
@@ -81,12 +84,10 @@ hold on
 set(gca,'Zdir','reverse')
 end
 
+%% surface Topo correction
+
 Dataall=ExtractElevationFromGeiod(Dataall,Geoidpath); 
 Dataall=ExtractFAcontent(Dataall,FApath);
-%the following uses the fuction bedmachine_data, which accesses the AMT toolbox and the
-%AntarcticaFilename = 'BedMachineAntarctica_2020-07-15_v02.nc'; 
-%Bedmachine surface is using the REMA DEM smoothly interpolated
-addpath('Z:\docs\ikoch\src\AntarcticMappingTools'); 
 Dataall.Surface_Bedmachine_ice = bedmachine_interp('surface',Dataall.psX,Dataall.psY);
 Dataall.Surface_Bedmachine_firn = Dataall.Surface_Bedmachine_ice+Dataall.FA;
 Dataall.Surface_REMA_fromBedmachine_firn=Dataall.Surface_Bedmachine_ice+Dataall.geoid+Dataall.FA;
@@ -103,13 +104,19 @@ figure(3) % check results
 plot3(Dataall.psX, Dataall.psY, Dataall.Surface_REMA_fromBedmachine_firn)
 hold on
 for kk=1:min_nr
-plot3(Dataall.psX, Dataall.psY, Dataall.layers_firncorr_elevation_REMA)
+plot3(Dataall.psX, Dataall.psY, movmean(Dataall.layers_firncorr_elevation_REMA(kk,:),100))
 end
 xlabel('Eastings')
 ylabel('Northings')
 zlabel('Elevation (m)')
 
+%% save data
+
 Geoall_FirnFileName = ['D:\Publications\Koch_ice_shelf_characteristics\Data\Picked_Layers\Geoall_' FileName];
+save('Geoall_DIR_all_layers_h','-struct', 'Dataall')
+
+%% correct bed pick, consider Bedmachine ice and average FA for compatability with Elmer ice
+%% also good for Quickshot codes
 
 %%NEED to fix and add the following for depth conversion of the basal pick
 %%and co-plotting with ELMER ice surfaces considering ice and FA
@@ -155,8 +162,6 @@ Geoall_FirnFileName = ['D:\Publications\Koch_ice_shelf_characteristics\Data\Pick
 % Data.elevation_bed_Bedmachine_ice=Data.Surface_Bedmachine_ice-(Data.depth_bed-FA_layer222);
 % Data.elevation_bed_REMA_fromBedmachine_firn=Data.Surface_REMA_fromBedmachine_firn-Data.depth_bed;
 % Data.elevation_bed_geoid_firn=Data.Surface_geoid_firn-Data.depth_bed;
-
-save(Geoall_FirnFileName,'-struct', 'Dataall')
 
 %need to combine for all layers 
 % kk1=1;

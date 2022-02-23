@@ -20,11 +20,12 @@ addpath('Z:\data\ikoch\data_large\BedMachine'); %add path to 'BedMachineAntarcti
 MaxDepth=1000; %in metres
 dz=0.001; % in meters.
 z=0:dz:MaxDepth;
-%rho = 910-460*exp(-0.033*z);%for RBIS
-rho = 910-460*exp(-0.025*z);%for DIR 
+rho = 910-460*exp(-0.033*z);%for RBIS
+%rho = 910-460*exp(-0.025*z);%for DIR 
 
 %% load layer data in open folder
 
+% load from Z:\data\ikoch\data_large\Radar\Data\AWI_flights\Picked_final\07_01_Heiko
 myDir = cd; %folder with data to be processed, needs to be open as 'Current Folder'
 myFiles = dir(fullfile(myDir,'*.mat')); %gets all mat files in struct
 nf=length(myFiles);
@@ -49,6 +50,7 @@ Dataall.twt=Data.v1.twt;
 
 dt=Dataall.twt(3)-Dataall.twt(2);
 [nr nc]=size(Dataall.psY);
+%nr=1; %only added for test purposes
 
 %min horizons that overlap - check why only 8
 min_nr=8;%usually would use nr, something needs to be fixed with final layer files
@@ -69,7 +71,6 @@ end
 
 %% run firncorrection
 
-%nr=1; %only added for test purposes
 %Firncorrection (external function)
 %It is taking lots of time!!!
 Dataall=Firncorrect(Dataall, rho, dt, dz, MaxDepth, nr,nc,z);
@@ -112,7 +113,7 @@ zlabel('Elevation (m)')
 %% save data
 
 Geoall_FirnFileName = ['D:\Publications\Koch_ice_shelf_characteristics\Data\Picked_Layers\Geoall_' FileName];
-save(Geoall_FirnFileName,'-struct', 'Dataall')
+save('Geoall_DIR_all_layers_h','-struct', 'Dataall')
 
 %% correct bed pick, consider Bedmachine ice and average FA for compatability with Elmer ice
 %% also good for Quickshot codes
